@@ -2,8 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using Unity.Netcode;
 
-public class FirstPersonController : MonoBehaviour
+public class FirstPersonController : NetworkBehaviour
 {
     [Header("Movement Speeds")]
     [SerializeField] private float walkSpeed = 3.0f;
@@ -27,16 +28,24 @@ public class FirstPersonController : MonoBehaviour
     private float verticalRoatation;
     private float CurrentSpeed => walkSpeed * (playerInput.SprintTriggered ? sprintMultiplier : 1.0f);
 
-    void Start()
+    public override void OnNetworkSpawn()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        if (!IsOwner)
+        {
+            mainCamera.gameObject.SetActive(false);
+        }
     }
 
     void Update()
     {
+        if (!IsOwner) return;
+
         HanldeMovement();
         HandleRotation();
+        HandleInteraction();
     }
 
     private Vector3 CalculateWorldDirection()
@@ -85,5 +94,20 @@ public class FirstPersonController : MonoBehaviour
         float mouseYRotation = playerInput.RotationInput.y * lookSensitivity;
         ApplyHorizontalRotation(mouseXRotation);
         ApplyVerticalRotation(mouseYRotation);
+    }
+
+    private void HandleInteraction()
+    {
+        if (playerInput.InteractPressedThisFrame)
+        {
+            Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+            if (Physics.Raycast(ray, out RaycastHit hit, 5f))
+            {
+                if (hit.collider.CompareTag("interactable"))
+                {
+                    hit.collider.SendMessage("Interact", SendMessageOptions.DontRequireReceiver);
+                }
+            }
+        }
     }
 }

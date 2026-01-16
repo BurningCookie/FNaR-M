@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 using UnityEngine.InputSystem;
 
-public class PlayerInput : MonoBehaviour
+public class PlayerInput : NetworkBehaviour
 {
     [Header("Input Action Asset")]
     [SerializeField] private InputActionAsset playerControls;
@@ -16,16 +17,19 @@ public class PlayerInput : MonoBehaviour
     [SerializeField] private string rotation = "Rotation";
     [SerializeField] private string jump = "Jump";
     [SerializeField] private string sprint = "Sprint";
+    [SerializeField] private string interact = "Interact";
 
     private InputAction movementAction;
     private InputAction rotationAction;
     private InputAction jumpAction;
     private InputAction sprintAction;
+    private InputAction interactAction;
 
     public Vector2 MovementInput { get; private set; }
     public Vector2 RotationInput { get; private set; }
     public bool JumpPressedThisFrame { get; private set; }
     public bool SprintTriggered { get; private set; }
+    public bool InteractPressedThisFrame { get; private set; }
 
     private void Awake()
     {
@@ -35,6 +39,7 @@ public class PlayerInput : MonoBehaviour
         rotationAction = mapReference.FindAction(rotation);
         jumpAction = mapReference.FindAction(jump);
         sprintAction = mapReference.FindAction(sprint);
+        interactAction = mapReference.FindAction(interact);
 
         SubscribeActionValuesToInputEvents();
     }
@@ -51,6 +56,8 @@ public class PlayerInput : MonoBehaviour
 
         sprintAction.performed += inputInfo => SprintTriggered = true;
         sprintAction.canceled += inputInfo => SprintTriggered = false;
+
+        interactAction.started += inputInfo => InteractPressedThisFrame = true;
     }
 
     private void OnEnable()
@@ -66,5 +73,6 @@ public class PlayerInput : MonoBehaviour
     private void LateUpdate()
     {
         JumpPressedThisFrame = false;
+        InteractPressedThisFrame = false;
     }
 }
