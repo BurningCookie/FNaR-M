@@ -33,6 +33,9 @@ public class FirstPersonController : NetworkBehaviour
         if (!IsOwner)
         {
             mainCamera.gameObject.SetActive(false);
+        }
+        else
+        {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
